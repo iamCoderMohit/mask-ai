@@ -10,7 +10,7 @@ const Layout = () => {
 
             <div className="bg-white h-[0.5px]"></div>
 
-            <main  className="px-10 h-[90vh] ">
+            <main  className="px-10 ">
                 <Outlet />
             </main>
 

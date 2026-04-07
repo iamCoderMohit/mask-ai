@@ -38,14 +38,24 @@ app.post("/template", async (req, res) => {
     
     if(ans?.toLowerCase() === "react") {
       return res.json({
-        prompts: [BASE_PROMPT, `Here is an artifact that contains all files of the project visible to you.\nConsider the contents of ALL files in the project.\n\n${reactBasePrompt}\n\nHere is a list of files that exist on the file system but are not being shown to you:\n\n  - .gitignore\n  - package-lock.json\n`],
+        prompts: [
+          {
+            role: "user",
+            content: `${BASE_PROMPT}, Here is an artifact that contains all files of the project visible to you.\nConsider the contents of ALL files in the project.\n\n${reactBasePrompt}\n\nHere is a list of files that exist on the file system but are not being shown to you:\n\n  - .gitignore\n  - package-lock.json\n`
+          }
+        ],
         uiPrompts: [reactBasePrompt]
       })
     }
     
     if(ans?.toLowerCase() === "node") {
       return res.json({
-        prompts: [`Here is an artifact that contains all files of the project visible to you.\nConsider the contents of ALL files in the project.\n\n${nodeBasePrompt}\n\nHere is a list of files that exist on the file system but are not being shown to you:\n\n  - .gitignore\n  - package-lock.json\n`],
+        prompts: [
+          {
+            role: "user",
+            content: `Here is an artifact that contains all files of the project visible to you.\nConsider the contents of ALL files in the project.\n\n${nodeBasePrompt}\n\nHere is a list of files that exist on the file system but are not being shown to you:\n\n  - .gitignore\n  - package-lock.json\n`
+          }
+        ],
         uiPrompts: [nodeBasePrompt]
       })
     }
@@ -68,7 +78,7 @@ app.post("/chat", async (req, res) => {
     const messages = req.body.messages
 
     const response = await client.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
+      model: "llama-3.1-8b-instant",
       messages: [
         {
           role: 'system',
