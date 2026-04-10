@@ -4,7 +4,7 @@ import type { FileItem } from '../types';
 
 interface FileExplorerProps {
   files: FileItem[];
-//   onFileSelect: (file: FileItem) => void;
+  onFileSelect: (file: FileItem) => void;
 }
 
 interface FileNodeProps {
@@ -63,9 +63,9 @@ function FileNode({ item, depth, onFileClick }: FileNodeProps) {
   );
 }
 
-export function FileExplorer({ files }: FileExplorerProps) {
+export function FileExplorer({ files, onFileSelect }: FileExplorerProps) {
   return (
-    <div className="bg-gray-900 rounded-lg shadow-lg p-4 h-full overflow-auto">
+    <div className="bg-gray-900 rounded-lg shadow-lg p-4">
       <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-100">
         <FolderTree className="w-5 h-5" />
         File Explorer
@@ -76,7 +76,7 @@ export function FileExplorer({ files }: FileExplorerProps) {
             key={`${file.path}-${index}`}
             item={file}
             depth={0}
-            // onFileClick={onFileSelect}
+            onFileClick={onFileSelect}
           />
         ))}
       </div>

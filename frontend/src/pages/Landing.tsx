@@ -5,7 +5,7 @@ export default function Landing() {
     const navigate = useNavigate()
     const [prompt, setPrompt] = useState("")
   return (
-    <div className="h-full flex items-center justify-center">
+    <div className="h-[90vh] flex items-center justify-center">
       <div className="w-200 flex flex-col gap-10">
         <h1 className="text-5xl font-bold">
           <i>What do you want to build today?</i>

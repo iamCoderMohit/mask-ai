@@ -78,6 +78,7 @@ app.post("/chat", async (req, res) => {
     const messages = req.body.messages
 
     const response = await client.chat.completions.create({
+      // model: "llama-3.3-70b-versatile",
       model: "llama-3.1-8b-instant",
       messages: [
         {
@@ -86,15 +87,15 @@ app.post("/chat", async (req, res) => {
         },
         ...messages
       ],
-      stream: true
+      // stream: true
     })
 
-    for await (const chunk of response) {
-    process.stdout.write(chunk.choices[0]?.delta?.content || "");
-  }
+  //   for await (const chunk of response) {
+  //   process.stdout.write(chunk.choices[0]?.delta?.content || "");
+  // }
 
     res.json({
-      msg: "done"
+      response: response.choices[0]?.message.content
     })
   } catch (error) {
     console.error(error)
