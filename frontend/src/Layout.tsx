@@ -3,7 +3,7 @@ import Navbar from "./components/Navbar"
 
 const Layout = () => {
     return (
-        <div className="bg-gray-900 min-h-screen text-white">
+        <div className="bg-gray-900 text-white">
             <header className="px-10">
                 <Navbar />
             </header>

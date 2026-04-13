@@ -7,15 +7,23 @@ import StepCard from "../components/StepCard";
 import { FileExplorer } from "../components/FileExplorer";
 import { CodeEditor } from "../components/CodeEditor";
 import { useWebContainer } from "../hooks/useWebContainer";
-import type { FileNode } from "@webcontainer/api";
 import { PreviewFrame } from "../components/PreviewFrame";
 import { TabView } from "../components/TabView";
+import Loading from "../components/Loading";
 
 export default function Create() {
   const location = useLocation();
   const data = location.state;
 
-  const webcontainer = useWebContainer()
+  const [userPrompt, setUserPrompt] = useState("");
+  const [llmMsg, setLlmMsg] = useState<
+    { role: "user" | "assistant"; content: string }[]
+  >([]);
+
+  const webcontainer = useWebContainer();
+  const [isMounted, setIsMounted] = useState(false);
+
+  const [loading, setLoading] = useState(false)
 
   const [activeTab, setActiveTab] = useState<"code" | "preview">("code");
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
@@ -25,6 +33,7 @@ export default function Create() {
   const [steps, setSteps] = useState<Step[]>([]);
 
   async function init() {
+    setLoading(true)
     const res = await axios.post(`${BACKEND_URL}/template`, {
       prompt: data.trim(),
     });
@@ -42,10 +51,30 @@ export default function Create() {
       messages: [...prompts, { role: "user", content: data }],
     });
 
-    setSteps(s => [...s, ...parseXml(stepsRes.data.response).map(x => ({
+    console.log(stepsRes.status)
+    if(stepsRes.status === 500) setLoading(false)
+
+    setSteps((s) => [
+      ...s,
+      ...parseXml(stepsRes.data.response).map((x) => ({
+        ...x,
+        status: "pending" as "pending",
+      })),
+    ]);
+
+    setLlmMsg(
+      [...prompts, prompt].map((content) => ({
+        role: "user",
+        content,
+      })),
+    );
+
+    setLlmMsg((x) => [
       ...x,
-      status: "pending" as "pending"
-    }))])
+      { role: "assistant", content: stepsRes.data.response },
+    ]);
+
+    setLoading(false)
   }
 
   // when the steps changes, we need to create them to the file explorer
@@ -83,7 +112,6 @@ export default function Create() {
               } else {
                 file.content = step.code;
               }
-
             } else {
               /// in a folder
               let folder = currentFileStructure.find(
@@ -121,52 +149,58 @@ export default function Create() {
     }
   }, [steps, files]);
 
-// useEffect(() => {
-//     const createMountStructure = (files: FileItem[]): Record<string, any> => {
-//       const mountStructure: Record<string, any> = {};
-  
-//       const processFile = (file: FileItem, isRootFolder: boolean) => {  
-//         if (file.type === 'folder') {
-//           // For folders, create a directory entry
-//           mountStructure[file.name] = {
-//             directory: file.children ? 
-//               Object.fromEntries(
-//                 file.children.map(child => [child.name, processFile(child, false)])
-//               ) 
-//               : {}
-//           };
-//         } else if (file.type === 'file') {
-//           if (isRootFolder) {
-//             mountStructure[file.name] = {
-//               file: {
-//                 contents: file.content || ''
-//               }
-//             };
-//           } else {
-//             // For files, create a file entry with contents
-//             return {
-//               file: {
-//                 contents: file.content || ''
-//               }
-//             };
-//           }
-//         }
-  
-//         return mountStructure[file.name];
-//       };
-  
-//       // Process each top-level file/folder
-//       files.forEach(file => processFile(file, true));
-  
-//       return mountStructure;
-//     };
-  
-//     const mountStructure = createMountStructure(files);
-  
-//     // Mount the structure if WebContainer is available
-//     console.log(mountStructure);
-//     webcontainer?.mount(mountStructure);
-//   }, [files, webcontainer]);
+  useEffect(() => {
+    const createMountStructure = (files: FileItem[]): Record<string, any> => {
+      const mountStructure: Record<string, any> = {};
+
+      const processFile = (file: FileItem, isRootFolder: boolean) => {
+        if (file.type === "folder") {
+          // For folders, create a directory entry
+          mountStructure[file.name] = {
+            directory: file.children
+              ? Object.fromEntries(
+                  file.children.map((child) => [
+                    child.name,
+                    processFile(child, false),
+                  ]),
+                )
+              : {},
+          };
+        } else if (file.type === "file") {
+          if (isRootFolder) {
+            mountStructure[file.name] = {
+              file: {
+                contents: file.content || "",
+              },
+            };
+          } else {
+            // For files, create a file entry with contents
+            return {
+              file: {
+                contents: file.content || "",
+              },
+            };
+          }
+        }
+
+        return mountStructure[file.name];
+      };
+
+      // Process each top-level file/folder
+      files.forEach((file) => processFile(file, true));
+
+      return mountStructure;
+    };
+
+    const mountStructure = createMountStructure(files);
+
+    // Mount the structure if WebContainer is available
+    console.log(mountStructure);
+    webcontainer?.mount(mountStructure).then(() => {
+      console.log("files mounted!");
+      setIsMounted(true); // 👈 signal that mount is done
+    });
+  }, [files, webcontainer]);
 
   useEffect(() => {
     init();
@@ -174,13 +208,56 @@ export default function Create() {
 
   return (
     <div className="py-2">
-      <h1 className="font-md text-lg mb-10">{data}</h1>
+      {loading && <Loading />}
+      <h1 className="font-md text-md mb-10 bg-gray-800 p-2">Prompt - {data}</h1>
 
       <div className="flex gap-5">
-        <div className="w-1/4">
-          {steps.map((step: any) => (
-            <StepCard title={step.title} />
-          ))}
+        <div className="w-1/4 h-[80vh] flex flex-col justify-between">
+          <div className="flex flex-col gap-2 h-3/4 overflow-scroll">
+          <h1>Steps </h1>
+            {steps.map((step: any) => (
+              <StepCard title={step.title} />
+            ))}
+          </div>
+
+          <div>
+            <textarea
+              name=""
+              id=""
+              className="p-2 border border-white/20 rounded-md outline-0 w-full"
+              placeholder="make this in dark mode..."
+              onChange={(e) => setUserPrompt(e.target.value)}
+            ></textarea>
+            <button
+              className="bg-blue-600 w-full rounded-md cursor-pointer"
+              onClick={async () => {
+                const newMessage = {
+                  role: "user" as "user",
+                  content: userPrompt,
+                };
+
+                const stepsRes = await axios.post(`${BACKEND_URL}/chat`, {
+                  messages: [...llmMsg, newMessage],
+                });
+
+                setLlmMsg((x) => [...x, newMessage]);
+                setLlmMsg(x => [...x, {
+                  role: "assistant",
+                  content: stepsRes.data.response 
+                }])
+
+                setSteps((s) => [
+                  ...s,
+                  ...parseXml(stepsRes.data.response).map((x) => ({
+                    ...x,
+                    status: "pending" as "pending",
+                  })),
+                ]);
+              }}
+            >
+              Send
+            </button>
+          </div>
         </div>
         <div className="w-1/3">
           <FileExplorer files={files} onFileSelect={setSelectedFile} />
@@ -192,7 +269,10 @@ export default function Create() {
           {activeTab === "code" ? (
             <CodeEditor file={selectedFile} />
           ) : (
-            <PreviewFrame webContainer={webcontainer!} files={files} />
+            webcontainer &&
+            isMounted && (
+              <PreviewFrame files={files} webContainer={webcontainer} />
+            )
           )}
         </div>
       </div>
