@@ -8,13 +8,13 @@ const Layout = () => {
                 <Navbar />
             </header>
 
-            <div className="bg-white h-[0.5px]"></div>
-
             <main  className="px-10">
                 <Outlet />
             </main>
 
-            <footer className="px-10">Footer</footer>
+            <footer className="px-10">
+                <h1 className="text-center text-gray-600/50">made by Mohit Joshi</h1>
+            </footer>
         </div>
     )
 }
