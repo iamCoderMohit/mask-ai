@@ -1,5 +1,5 @@
-import { MODIFICATIONS_TAG_NAME, allowedHTMLElements, WORK_DIR } from './constants';
-import { stripIndents } from './stripIndent';
+import { MODIFICATIONS_TAG_NAME, allowedHTMLElements, WORK_DIR } from './constants.js';
+import { stripIndents } from './stripIndent.js';
 
 export const BASE_PROMPT = "For all designs I ask you to make, have them be beautiful, not cookie cutter. Make webpages that are fully featured and worthy for production.\n\nBy default, this template supports JSX syntax with Tailwind CSS classes, React hooks, and Lucide React for icons. Do not install other packages for UI themes, icons, etc unless absolutely necessary or I request them.\n\nUse icons from lucide-react for logos.\n"
 

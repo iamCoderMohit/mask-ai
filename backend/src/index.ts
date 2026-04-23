@@ -1,7 +1,9 @@
+import 'dotenv/config'
+
 import express, { text } from "express";
-import { BASE_PROMPT, getSystemPrompt } from "./prompts";
-import { basePrompt as nodeBasePrompt } from "./defaults/node";
-import { basePrompt as reactBasePrompt } from "./defaults/react";
+import { BASE_PROMPT, getSystemPrompt } from "./prompts.js";
+import { basePrompt as nodeBasePrompt } from "./defaults/node.js";
+import { basePrompt as reactBasePrompt } from "./defaults/react.js";
 import OpenAI from "openai";
 import cors from 'cors'
 
